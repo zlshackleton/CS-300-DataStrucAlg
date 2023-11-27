@@ -1,0 +1,245 @@
+//============================================================================
+// Name        : HashTable.cpp
+// Author      : Zach Shack
+// Version     : 1.0
+// Copyright   : Copyright © 2017 SNHU COCE
+// Description : Hello World in C++, Ansi-style
+//============================================================================
+
+#include <algorithm>
+#include <climits>
+#include <iostream>
+#include <string> // atoi
+#include <time.h>
+
+#include "CSVparser.hpp"
+
+using namespace std;
+
+//============================================================================
+// Global definitions visible to all methods and classes
+//============================================================================
+
+const unsigned int DEFAULT_SIZE = 179;
+
+// forward declarations
+double strToDouble(string str, char ch);
+
+// define a structure to hold bid information
+struct Bid {
+    string bidId; // unique identifier
+    string title;
+    string fund;
+    double amount;
+    Bid() {
+        amount = 0.0;
+    }
+};
+
+//============================================================================
+// Hash Table class definition
+//============================================================================
+
+/**
+ * Define a class containing data members and methods to
+ * implement a hash table with chaining.
+ */
+void displayBid(Bid bid);
+
+class HashTable {
+
+private:
+    // Define structures to hold bids
+    struct Node {
+        Bid bid;
+        unsigned int key;
+        Node *next;
+
+        // default constructor
+        Node() {
+            key = UINT_MAX;
+            next = nullptr;
+        }
+
+        // initialize with a bid
+        Node(Bid aBid) : Node() {
+            bid = aBid;
+        }
+
+        // initialize with a bid and a key
+        Node(Bid aBid, unsigned int aKey) : Node(aBid) {
+            key = aKey;
+        }
+    };
+
+    vector<Node> nodes;
+
+    unsigned int tableSize = DEFAULT_SIZE;
+
+    unsigned int hash(int key);
+
+public:
+    HashTable();
+    HashTable(unsigned int size);
+    virtual ~HashTable();
+    void Insert(Bid bid);
+    void PrintAll();
+    void Remove(string bidId);
+    Bid Search(string bidId);
+};
+
+/**
+ * Default constructor
+ */
+HashTable::HashTable() {
+    // FIXME (1): Initialize the structures used to hold bids
+    
+    // Initalize node structure by resizing tableSize
+    nodes.resize(tableSize);
+}
+
+/**
+ * Constructor for specifying size of the table
+ * Use to improve efficiency of hashing algorithm
+ * by reducing collisions without wasting memory.
+ */
+HashTable::HashTable(unsigned int size) {
+    // invoke local tableSize to size with this->
+    this->tableSize = size;
+    // resize nodes size
+    nodes.resize(size);
+}
+
+
+/**
+ * Destructor
+ */
+HashTable::~HashTable() {
+    // FIXME (2): Implement logic to free storage when class is destroyed
+    
+    // erase nodes beginning
+    nodes.erase(nodes.begin());
+}   
+
+/**
+ * Calculate the hash value of a given key.
+ * Note that key is specifically defined as
+ * unsigned int to prevent undefined results
+ * of a negative list index.
+ *
+ * @param key The key to hash
+ * @return The calculated hash
+ */
+unsigned int HashTable::hash(int key) {
+    // FIXME (3): Implement logic to calculate a hash value
+    // return key tableSize
+    return key % tableSize;
+}
+
+/**
+ * Insert a bid
+ *
+ * @param bid The bid to insert
+ */
+void HashTable::Insert(Bid bid) {
+    // FIXME (5): Implement logic to insert a bid
+    // create the key for the given bid
+    unsigned key = hash(atoi(bid.bidId.c_str()));                                                             //Optional C++ 11 std::stoi() to help format string 
+    // retrieve node using key
+    Node* prevNode = &(nodes.at(key));
+    // if no entry found for the key
+    if (prevNode->key == UINT_MAX) {
+        // assign this node to the key position
+        Node* nextNode = new Node(bid, key);
+        nodes[key] = *nextNode;
+    }
+    // else if node is not used
+    else if (prevNode->key != UINT_MAX && prevNode->next == nullptr) {
+        // assing old node key to UNIT_MAX, set to key, set old node to bid and old node next to null pointer
+        prevNode->key = UINT_MAX;
+    }
+    // else find the next open node
+    else {
+        // add new newNode to end
+        while (prevNode->next != nullptr) {
+            prevNode = prevNode->next;
+        }
+        prevNode->next = new Node(bid, key); //assigning the new node a bid and key
+            }
+
+}
+
+/**
+ * Print all bids
+ */
+void HashTable::PrintAll() {
+    // FIXME (6): Implement logic to print all bids
+    // for node begin to end iterate
+    for (unsigned int i = 0; i < nodes.size(); ++i) {
+        displayBid(nodes[i].bid);
+    }
+    //   if key not equal to UINT_MAx
+            // output key, bidID, title, amount and fund
+            // node is equal to next iter
+            // while node not equal to nullptr
+               // output key, bidID, title, amount and fund
+               // node is equal to next node
+
+}
+
+/**
+ * Remove a bid
+ *
+ * @param bidId The bid id to search for
+ */
+void HashTable::Remove(string bidId) {
+    // FIXME (7): Implement logic to remove a bid
+    // set key equal to hash atoi bidID cstring
+    unsigned key = hash(atoi(bidId.c_str()));
+    // erase node begin and key
+    nodes.erase(nodes.begin() + key);
+}
+
+/**
+ * Search for the specified bidId
+ *
+ * @param bidId The bid id to search for
+ */
+Bid HashTable::Search(string bidId) {
+    Bid bid;
+
+    // FIXME (8): Implement logic to search for and return a bid
+
+    // create the key for the given bid
+    unsigned key = hash(atoi(bidId.c_str()));
+
+    // Initialize currNode to point to the first node at the specified key
+    Node* currNode = &(nodes[key]);
+    // if entry found for the key
+    if (currNode != nullptr && currNode->key != UINT_MAX && currNode->bid.bidId.compare(bidId) == 0) {
+        return currNode->bid;
+    }
+         //return node bid
+
+    // If no entry found for the key
+    if (currNode == nullptr || currNode->key == UINT_MAX) {
+        // Return bid
+        return bid;
+    }
+    
+    // While node not equal to nullptr/
+    while (currNode != nullptr) {
+        // If the current node matches, return it
+        if (currNode->bid.bidId == bidId)
+        {
+            // Node is equal to next node
+            return currNode->bid;
+        }
+
+        // Move to the next node
+        currNode = currNode->next;
+    }
+
+    // If no matching bid found in the linked list, return an empty bid
+    return bid;
+}
